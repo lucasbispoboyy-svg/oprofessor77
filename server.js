@@ -127,15 +127,31 @@ function seed() {
     );
     console.log(`Admin criado: ${cfg.ADMIN_EMAIL} (senha na variável ADMIN_PASSWORD: arquivo .env ou ${path.join(cfg.DATA_DIR, 'segredos.json')})`);
   }
-  if (!db.prepare('SELECT 1 FROM templates').get()) {
+    if (!db.prepare('SELECT 1 FROM templates').get()) {
     const dir = path.join(__dirname, 'exemplos');
-    const html = fs.readFileSync(path.join(dir, 'loja-fone.html'), 'utf8');
-    const campos = fs.readFileSync(path.join(dir, 'loja-fone.campos.json'), 'utf8');
-    db.prepare('INSERT INTO templates (nome, descricao, html, campos, ativo, criado_em) VALUES (?, ?, ?, ?, 1, ?)').run(
-      'Pulse — Produto único',
-      'Página de produto único para dropshipping, com contador de oferta, benefícios, avaliações e FAQ.',
-      html, JSON.stringify(JSON.parse(campos)), Date.now()
-    );
+    const arquivoHtml = path.join(dir, 'loja-fone.html');
+    const arquivoCampos = path.join(dir, 'loja-fone.campos.json');
+
+    if (fs.existsSync(arquivoHtml) && fs.existsSync(arquivoCampos)) {
+      const html = fs.readFileSync(arquivoHtml, 'utf8');
+      const campos = fs.readFileSync(arquivoCampos, 'utf8');
+
+      db.prepare(`
+        INSERT INTO templates
+        (nome, descricao, html, campos, ativo, criado_em)
+        VALUES (?, ?, ?, ?, 1, ?)
+      `).run(
+        'Pulse — Produto único',
+        'Página de produto único para dropshipping, com contador de oferta, benefícios, avaliações e FAQ.',
+        html,
+        JSON.stringify(JSON.parse(campos)),
+        Date.now()
+      );
+
+      console.log('Template de demonstração instalado.');
+    } else {
+      console.warn('Template de demonstração não encontrado. O servidor continuará sem ele. Adicione um template pelo painel administrativo.');
+    }
   }
 }
 
